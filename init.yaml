@@ -1,0 +1,41 @@
+#cloud-config
+# vim: syntax=yaml
+#
+package_upgrade: true
+runcmd:
+ - yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+ - yum install -y awslogs wget java unzip inotify-tools amazon-efs-utils ruby git
+ - alternatives --install /usr/bin/java java /usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java 1
+ - systemctl start awslogsd
+ - systemctl enable awslogsd.service
+ - mkdir /var/lib/jenkins
+ - logger mounting ${efs_id} to /var/lib/jenkins
+ - mount -t efs ${efs_id}:/ /var/lib/jenkins
+ - mkdir -p /var/lib/jenkins/.ssh 
+ - touch /var/lib/jenkins/.ssh/known_hosts
+ - aws s3 cp s3://${config_s3_uri} /var/lib/jenkins/
+ - wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat-stable/jenkins.repo
+ - rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key
+ - yum install -y ${jenkins_version}
+ - logger starting jenkins
+ - systemctl start jenkins.service
+ - systemctl enable jenkins.service
+ - chown jenkins /var/lib/jenkins/.ssh
+ - chown jenkins /var/lib/jenkins/.ssh/known_hosts
+ - sleep 1m
+ - service jenkins restart
+ - while [ ! -f "/var/cache/jenkins/war/WEB-INF/jenkins-cli.jar" ]; do sleep 1m; done
+ - while [ ! -f "/var/lib/jenkins/secrets/initialAdminPassword" ]; do sleep 1m; done
+ - logger Inital jenkins password is $(cat /var/lib/jenkins/secrets/initialAdminPassword)
+ - sleep 1m
+ - java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://127.0.0.1:8080/ -auth admin:$(cat /var/lib/jenkins/secrets/initialAdminPassword) install-plugin configuration-as-code configuration-as-code-secret-ssm credentials aws-secrets-manager-credentials-provider mailer cloudbees-folder antisamy-markup-formatter build-timeout credentials-binding timestamper ws-cleanup ant gradle nodejs htmlpublisher workflow-aggregator github-branch-source pipeline-github-lib pipeline-stage-view copyartifact parameterized-trigger conditional-buildstep bitbucket git github ssh-slaves matrix-auth pam-auth ldap role-strategy active-directory authorize-project email-ext 
+ - sleep 1m
+ - java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://127.0.0.1:8080/ -auth admin:$(cat /var/lib/jenkins/secrets/initialAdminPassword) install-plugin android-emulator analysis-core android-lint android-signing google-play-android-publisher junit fabric-beta-publisher appcenter ios-device-connector rvm xcode-plugin saml ruby-runtime
+ - sleep 1m
+ - java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://127.0.0.1:8080/ -auth admin:$(cat /var/lib/jenkins/secrets/initialAdminPassword) safe-restart
+ - sleep 1m
+ - java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://127.0.0.1:8080/ -auth admin:$(cat /var/lib/jenkins/secrets/initialAdminPassword) reload-jcasc-configuration
+ - sleep 1m
+
+
+
