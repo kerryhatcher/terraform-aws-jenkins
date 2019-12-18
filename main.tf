@@ -89,6 +89,7 @@ data "template_file" "init_script" {
   template = "${file("${path.module}/init.yaml")}"
 
   vars = {
+    extra_boot_script = "${var.extra_boot_script}"
     config_s3_uri = "${var.config_s3_uri}"
     efs_id = "${aws_efs_file_system.jenkins_master.id}" 
     jenkins_version = var.jenkins_version
@@ -167,13 +168,6 @@ resource "aws_security_group" "jenkins_master" {
     security_groups = ["${aws_security_group.jenkins_master_alb.id}"]
   }
 
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["10.7.7.0/24"]
-  }
-
   egress {
     from_port       = 0
     to_port         = 0
@@ -181,6 +175,8 @@ resource "aws_security_group" "jenkins_master" {
     cidr_blocks     = ["0.0.0.0/0"]
   }
 }
+
+
 
 # Instance Profile sets what IAM role to use
 resource "aws_iam_instance_profile" "jenkins_master_profile" {

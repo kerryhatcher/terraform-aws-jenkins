@@ -27,15 +27,17 @@ runcmd:
  - while [ ! -f "/var/cache/jenkins/war/WEB-INF/jenkins-cli.jar" ]; do sleep 1m; done
  - while [ ! -f "/var/lib/jenkins/secrets/initialAdminPassword" ]; do sleep 1m; done
  - logger Inital jenkins password is $(cat /var/lib/jenkins/secrets/initialAdminPassword)
- - sleep 1m
+ - sleep 30s
  - java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://127.0.0.1:8080/ -auth admin:$(cat /var/lib/jenkins/secrets/initialAdminPassword) install-plugin configuration-as-code configuration-as-code-secret-ssm credentials aws-secrets-manager-credentials-provider mailer cloudbees-folder antisamy-markup-formatter build-timeout credentials-binding timestamper ws-cleanup ant gradle nodejs htmlpublisher workflow-aggregator github-branch-source pipeline-github-lib pipeline-stage-view copyartifact parameterized-trigger conditional-buildstep bitbucket git github ssh-slaves matrix-auth pam-auth ldap role-strategy active-directory authorize-project email-ext 
- - sleep 1m
+ - sleep 30s
  - java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://127.0.0.1:8080/ -auth admin:$(cat /var/lib/jenkins/secrets/initialAdminPassword) install-plugin android-emulator analysis-core android-lint android-signing google-play-android-publisher junit fabric-beta-publisher appcenter ios-device-connector rvm xcode-plugin saml ruby-runtime
- - sleep 1m
+ - sleep 30s
  - java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://127.0.0.1:8080/ -auth admin:$(cat /var/lib/jenkins/secrets/initialAdminPassword) safe-restart
- - sleep 1m
- - java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://127.0.0.1:8080/ -auth admin:$(cat /var/lib/jenkins/secrets/initialAdminPassword) reload-jcasc-configuration
- - sleep 1m
+ - aws s3 cp s3://${extra_boot_script} /var/lib/jenkins/
+ - logger about to start custom init script
+ - echo about to start custom init script
+ - chmod a+x /var/lib/jenkins/init.sh
+ - bash /var/lib/jenkins/init.sh
 
 
 

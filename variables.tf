@@ -14,3 +14,7 @@ variable "dns_zone" {
   description = "The FQDN of a zone in your account. We will create a new A record of jenkins pointing to the ALB of the jenkins master"
 }
 
+variable "extra_boot_script" {
+    type = "string"
+    description = "an S3 object containing a bash shell script that will be ran at the end of jenkins install. Create an empty file if you don't need this" 
+}
